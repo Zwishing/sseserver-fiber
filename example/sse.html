@@ -1,0 +1,29 @@
+<html>
+<body>
+<h1>Latest pets:</h1>
+<ul id="petList"></ul>
+
+<script>
+    // connect to a different event source endpoint and register event handlers
+    es = new EventSource("http://localhost:8080/sse")
+
+    // bind the event listeners
+    es.addEventListener("processing-percent", displayPercent);
+
+    // our fancy "application" lolz
+    function displayPercent(event) {
+        var breed = event.data;
+        _appendListItem(`processing-percent<i>${breed}</i>`);
+        if (breed==="100%"){
+            es.close()
+        }
+    }
+
+    function _appendListItem(msg) {
+        var li = document.createElement("li");
+        li.innerHTML = msg;
+        document.getElementById("petList").appendChild(li);
+    }
+</script>
+</body>
+</html>
