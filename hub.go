@@ -2,6 +2,7 @@ package sseserver
 
 import (
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -9,20 +10,19 @@ import (
 //
 // Hub 是 Server 的"核心"，但保持私有以隐藏实现细节
 type hub struct {
-	broadcast   chan SSEMessage      // 需要广播的入站消息
-	connections map[*connection]bool // 已注册的连接
-	register    chan *connection     // 连接注册请求通道
-	unregister  chan *connection     // 连接注销请求通道
-	shutdown    chan bool            // 内部关闭通知通道
-	sentMsgs    uint64              // 启动以来广播的消息数
-	startupTime time.Time           // Hub 创建时间
+	broadcast   chan SSEMessage           // 需要广播的入站消息
+	connections sync.Map                  // 已注册的连接
+	register    chan *connection          // 连接注册请求通道
+	unregister  chan *connection          // 连接注销请求通道
+	shutdown    chan bool                 // 内部关闭通知通道
+	sentMsgs    uint64                   // 启动以来广播的消息数
+	startupTime time.Time                // Hub 创建时间
 }
 
 // 创建新的 Hub 实例
 func newHub() *hub {
 	return &hub{
 		broadcast:   make(chan SSEMessage),
-		connections: make(map[*connection]bool),
 		register:    make(chan *connection),
 		unregister:  make(chan *connection),
 		shutdown:    make(chan bool),
@@ -49,13 +49,14 @@ func (h *hub) run() {
 		select {
 		case <-h.shutdown:
 			// 关闭时断开所有连接
-			for c := range h.connections {
-				h._shutdownConn(c)
-			}
+			h.connections.Range(func(k, v interface{}) bool {
+				h._shutdownConn(k.(*connection))
+				return true
+			})
 			return
 		case c := <-h.register:
 			// 注册新连接
-			h.connections[c] = true
+			h.connections.Store(c, true)
 		case c := <-h.unregister:
 			// 注销连接
 			h._unregisterConn(c)
@@ -70,7 +71,7 @@ func (h *hub) run() {
 // _unregisterConn 从 hub 中移除客户端连接
 // 可以安全地多次调用同一连接
 func (h *hub) _unregisterConn(c *connection) {
-	delete(h.connections, c)
+	h.connections.Delete(c)
 }
 
 // _shutdownConn 从 hub 中移除客户端连接并关闭它
@@ -87,7 +88,8 @@ func (h *hub) _shutdownConn(c *connection) {
 // 如果由于任何客户端的发送缓冲区已满而失败，将关闭该连接
 func (h *hub) _broadcastMessage(msg SSEMessage) {
 	formattedMsg := msg.sseFormat()
-	for c := range h.connections {
+	h.connections.Range(func(k, v interface{}) bool {
+		c := k.(*connection)
 		if strings.HasPrefix(msg.Namespace, c.namespace) {
 			select {
 			case c.send <- formattedMsg:
@@ -108,5 +110,17 @@ func (h *hub) _broadcastMessage(msg SSEMessage) {
 				*/
 			}
 		}
-	}
+		return true
+	})
+}
+
+func stop(h *hub, namespace string)bool{
+	h.connections.Range(func(k, v interface{}) bool {
+		c := k.(*connection)
+		if namespace == c.namespace {
+			h._shutdownConn(c)
+		}
+		return true
+	})
+	return false
 }

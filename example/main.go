@@ -11,7 +11,7 @@ import (
 
 func main() {
 	app := fiber.New()
-
+	defer sseserver.Close()
 	//CORS for external resources
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
@@ -19,28 +19,26 @@ func main() {
 	}))
 
 	app.Get("/sse", func(ctx *fiber.Ctx) error {
-		err := sseserver.RegisterConnection(ctx)
+		err := sseserver.Subscribe(ctx,"sse")
 		if err != nil {
 			return err
 		}
 		go func() {
-			server := sseserver.GetSseServer()
-
 			// 使用time.Tick控制发送频率
 			ticker := time.NewTicker(100 * time.Millisecond)
 			defer ticker.Stop()
-
 			for i := 1; i <= 100; i++ {
 				<-ticker.C // 等待下一个tick
-				server.Broadcast <- sseserver.SSEMessage{
+				 sseserver.SendSseMessage(sseserver.SSEMessage{
 					Event:     "processing-percent",
 					Data:      []byte(fmt.Sprintf("%d%%", i)),
-					Namespace: "/sse/process",
-				}
+					Namespace: "sse",
+				})
 			}
+			
 		}()
 		return nil
 	})
-
+	
 	app.Listen(":8080")
 }

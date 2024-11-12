@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"github.com/gofiber/fiber/v2"
 	"github.com/valyala/fasthttp"
-	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -63,7 +62,7 @@ func (c *connection) Status() connectionStatus {
 }
 
 // write 包装写入操作,统一错误处理
-func (c *connection) write(w *bufio.Writer, data []byte) error {
+func write(w *bufio.Writer, data []byte) error {
 	if _, err := w.Write(data); err != nil {
 		return err
 	}
@@ -83,14 +82,14 @@ func (c *connection) writer(h *hub) {
 				if !ok {
 					return
 				}
-				if err := c.write(w, msg); err != nil {
+				if err := write(w, msg); err != nil {
 					h.unregister <- c
 					return
 				}
 				atomic.AddUint64(&c.msgsSent, 1)
 
 			case <-keepaliveTickler.C:
-				if err := c.write(w, keepaliveMsg); err != nil {
+				if err := write(w, keepaliveMsg); err != nil {
 					h.unregister <- c
 					return
 				}
@@ -100,23 +99,34 @@ func (c *connection) writer(h *hub) {
 }
 
 // connectHandler 创建处理SSE连接的HTTP处理器
-func connectHandler(h *hub) fiber.Handler {
+func connectHandler(h *hub,namespace string) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		c.Set("Content-Type", "text/event-stream")
 		c.Set("Cache-Control", "no-cache")
 		c.Set("Connection", "keep-alive")
 		c.Set("Transfer-Encoding", "chunked")
 
-		namespace := strings.TrimPrefix(c.Path(), "/")
-		if namespace == "" {
-			namespace = "/"
-		} else {
-			namespace = "/" + namespace
-		}
+		// namespace := strings.TrimPrefix(c.Path(), "/")
+		// if namespace == "" {
+		// 	namespace = "/"
+		// } else {
+		// 	namespace = "/" + namespace
+		// }
 
 		conn := newConnection(c, namespace)
 		h.register <- conn
 		conn.writer(h)
 		return nil
 	}
+}
+
+func connect(c *fiber.Ctx,h *hub,namespace string) error {
+		c.Set("Content-Type", "text/event-stream")
+		c.Set("Cache-Control", "no-cache")
+		c.Set("Connection", "keep-alive")
+		c.Set("Transfer-Encoding", "chunked")
+		conn := newConnection(c, namespace)
+		h.register <- conn
+		conn.writer(h)
+		return nil
 }

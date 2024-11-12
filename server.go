@@ -34,13 +34,22 @@ func newServer() *Server {
 	return &s
 }
 
-func RegisterConnection(ctx *fiber.Ctx) error {
+func Subscribe(ctx *fiber.Ctx, namespace string) error {
 	once.Do(func() {
 		sseServer = newServer()
 	})
-	return connectHandler(sseServer.hub)(ctx)
+	return connect(ctx,sseServer.hub, namespace)
 }
 
-func GetSseServer() *Server {
-	return sseServer
+func SendSseMessage(msg SSEMessage)  {
+	sseServer.Broadcast <-msg
 }
+
+func Close() {
+	if sseServer != nil && sseServer.hub != nil {
+		close(sseServer.hub.broadcast)
+		sseServer.hub.Shutdown()
+	}
+}
+
+
