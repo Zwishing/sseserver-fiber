@@ -1,4 +1,4 @@
-package sseserver 
+package sseserver
 
 // SSEMessage 用于在Server-Sent Event流上发送的消息结构体
 //

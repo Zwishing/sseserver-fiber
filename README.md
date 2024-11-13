@@ -1,4 +1,4 @@
-This repository is inspired by [sseserver](https://github.com/mroth/sseserver), a server-sent events implementation in Go.
+The core of repository is from [sseserver](https://github.com/mroth/sseserver), a server-sent events implementation in Go.
 This is a version designed specifically for the Fiber web framework.
 
 ## Installation
