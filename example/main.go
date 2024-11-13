@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/Zwishing/sseserver-fiber"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"sseserver-fiber"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +19,7 @@ func main() {
 	}))
 
 	app.Get("/sse", func(ctx *fiber.Ctx) error {
-		err := sseserver.Subscribe(ctx,"sse")
+		err := sseserver.Subscribe(ctx, "sse")
 		if err != nil {
 			return err
 		}
@@ -29,16 +29,16 @@ func main() {
 			defer ticker.Stop()
 			for i := 1; i <= 100; i++ {
 				<-ticker.C // 等待下一个tick
-				 sseserver.SendSseMessage(sseserver.SSEMessage{
+				sseserver.SendSseMessage(sseserver.SSEMessage{
 					Event:     "processing-percent",
 					Data:      []byte(fmt.Sprintf("%d%%", i)),
 					Namespace: "sse",
 				})
 			}
-			
+
 		}()
 		return nil
 	})
-	
+
 	app.Listen(":8080")
 }
