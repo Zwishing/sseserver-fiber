@@ -38,11 +38,11 @@ func Subscribe(ctx *fiber.Ctx, namespace string) error {
 	once.Do(func() {
 		sseServer = newServer()
 	})
-	return connect(ctx,sseServer.hub, namespace)
+	return connect(ctx, sseServer.hub, namespace)
 }
 
-func SendSseMessage(msg SSEMessage)  {
-	sseServer.Broadcast <-msg
+func SendSseMessage(msg SSEMessage) {
+	sseServer.Broadcast <- msg
 }
 
 func Close() {
@@ -51,5 +51,3 @@ func Close() {
 		sseServer.hub.Shutdown()
 	}
 }
-
-

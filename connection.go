@@ -99,7 +99,7 @@ func (c *connection) writer(h *hub) {
 }
 
 // connectHandler 创建处理SSE连接的HTTP处理器
-func connectHandler(h *hub,namespace string) func(c *fiber.Ctx) error {
+func connectHandler(h *hub, namespace string) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		c.Set("Content-Type", "text/event-stream")
 		c.Set("Cache-Control", "no-cache")
@@ -120,13 +120,13 @@ func connectHandler(h *hub,namespace string) func(c *fiber.Ctx) error {
 	}
 }
 
-func connect(c *fiber.Ctx,h *hub,namespace string) error {
-		c.Set("Content-Type", "text/event-stream")
-		c.Set("Cache-Control", "no-cache")
-		c.Set("Connection", "keep-alive")
-		c.Set("Transfer-Encoding", "chunked")
-		conn := newConnection(c, namespace)
-		h.register <- conn
-		conn.writer(h)
-		return nil
+func connect(c *fiber.Ctx, h *hub, namespace string) error {
+	c.Set("Content-Type", "text/event-stream")
+	c.Set("Cache-Control", "no-cache")
+	c.Set("Connection", "keep-alive")
+	c.Set("Transfer-Encoding", "chunked")
+	conn := newConnection(c, namespace)
+	h.register <- conn
+	conn.writer(h)
+	return nil
 }

@@ -10,13 +10,13 @@ import (
 //
 // Hub 是 Server 的"核心"，但保持私有以隐藏实现细节
 type hub struct {
-	broadcast   chan SSEMessage           // 需要广播的入站消息
-	connections sync.Map                  // 已注册的连接
-	register    chan *connection          // 连接注册请求通道
-	unregister  chan *connection          // 连接注销请求通道
-	shutdown    chan bool                 // 内部关闭通知通道
-	sentMsgs    uint64                   // 启动以来广播的消息数
-	startupTime time.Time                // Hub 创建时间
+	broadcast   chan SSEMessage  // 需要广播的入站消息
+	connections sync.Map         // 已注册的连接
+	register    chan *connection // 连接注册请求通道
+	unregister  chan *connection // 连接注销请求通道
+	shutdown    chan bool        // 内部关闭通知通道
+	sentMsgs    uint64           // 启动以来广播的消息数
+	startupTime time.Time        // Hub 创建时间
 }
 
 // 创建新的 Hub 实例
@@ -114,7 +114,7 @@ func (h *hub) _broadcastMessage(msg SSEMessage) {
 	})
 }
 
-func stop(h *hub, namespace string)bool{
+func stop(h *hub, namespace string) bool {
 	h.connections.Range(func(k, v interface{}) bool {
 		c := k.(*connection)
 		if namespace == c.namespace {
