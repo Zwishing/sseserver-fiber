@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/zwishing/sseserver-fiber"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
