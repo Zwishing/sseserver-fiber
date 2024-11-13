@@ -1,4 +1,4 @@
-module github.com/Zwishing/sseserver-fiber
+module github.com/zwishing/sseserver-fiber
 
 go 1.22
 
