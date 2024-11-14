@@ -4,7 +4,7 @@ This is a version designed specifically for the Fiber web framework.
 ## Installation
 
 ```bash
-go get github.com/Zwishing/sseserver-fiber
+go get github.com/zwishing/sseserver-fiber
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ package main
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/Zwishing/sseserver-fiber"
+	"github.com/zwishing/sseserver-fiber"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
